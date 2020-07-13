@@ -1,0 +1,52 @@
+---
+title: "Tidy 311"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Step 7
+
+### Ingesting Data
+```{r}
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyverse)
+library(reshape)
+data = read_csv("https://data.cityofnewyork.us/resource/erm2-nwe9.csv?%24select=Created_Date,Agency,Complaint_Type,Incident_Address,Location")
+```
+
+### What makes the data messy?
+```{r}
+str(data)
+```
+* The latitude and longitude are in the same column.
+* The minute, hour, day, year, and month are in the same column.
+
+### Separating Latitude & Longitude
+```{r}
+data = data %>% extract(Location, c('Latitude', 'Longitude'), '\\((.*) (.*)\\)', convert = TRUE) 
+```
+
+### Separating House Number & Street Name
+```{r}
+data = data %>% extract(Incident_Address, c('House Number', 'Street'), '(\\S+)\\s+(.*)', convert = TRUE) 
+```
+This splits the address at the first space, but it does not work perfectly. Some of the addresses do not contain a house number, as in row 18, in this case "ESSEX STREET" becomes "ESSEX" and "STREET".
+
+### Separating Date and Time
+```{r}
+data$Date = as.Date(data$Created_Date)
+data$Time = format(data$Created_Date,"%H:%M:%S")
+```
+
+### Viewing Results
+```{r}
+head(data, 20)
+```
+
+
+__Some R code modified from StackOverflow.com__
